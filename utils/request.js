@@ -10,7 +10,7 @@ const API_BASE_URL = 'https://api.it120.cc'
  */
 function FetchRequest(url, data, method = 'GET', cache = 0, header = {}, noSubDomain = false) {
   var request_key = GetStorageKey(url, method);
-  console.log(111, cache)
+  console.log('request api', cache)
   if (cache) {
     return new Promise(Storage);
   } else {
@@ -184,5 +184,6 @@ Promise.prototype.finally = function (callback) {
 module.exports = {
   fetchRequest: FetchRequest,
   cacheTime: 1800,
-  fetchRequestAll: FetchRequestAll
+  fetchRequestAll: FetchRequestAll,
+  appid: CONFIG.appid
 }
