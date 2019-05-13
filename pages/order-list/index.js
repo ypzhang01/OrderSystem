@@ -1,5 +1,6 @@
 var wxpay = require('../../utils/pay.js')
 const api = require('../../utils/request.js')
+const md5 = require('../../utils/MD5.js')
 var app = getApp()
 Page({
   data: {
@@ -45,45 +46,76 @@ Page({
     })
   },
   toPayTap: function(e) {
-    var that = this;
-    var orderId = e.currentTarget.dataset.id;
-    var money = e.currentTarget.dataset.money;
-    var needScore = e.currentTarget.dataset.score;
-    api.fetchRequest('/user/amount', {
+    // var that = this;
+    // var orderId = e.currentTarget.dataset.id;
+    // var money = e.currentTarget.dataset.money;
+    // var needScore = e.currentTarget.dataset.score;
+    // api.fetchRequest('/user/amount', {
+    //   token: wx.getStorageSync('token'),
+    // }).then(function(res) {
+    //   if (res.data.code == 0) {
+    //     // res.data.data.balance
+    //     money = money - res.data.data.balance;
+    //     if (res.data.data.score < needScore) {
+    //       wx.showModal({
+    //         title: '错误',
+    //         content: '您的积分不足，无法支付',
+    //         showCancel: false
+    //       })
+    //       return;
+    //     }
+    //     if (money <= 0) {
+    //       // 直接使用余额支付
+    //       api.fetchRequest('/order/pay', {
+    //         token: wx.getStorageSync('token'),
+    //         orderId: orderId
+    //       }, 'POST', 0, {
+    //         'content-type': 'application/x-www-form-urlencoded'
+    //       }).then(function(res) {
+    //         that.onShow();
+    //       })
+    //     } else {
+    //       wxpay.wxpay(app, money, orderId, "/pages/order-list/index");
+    //     }
+    //   } else {
+    //     wx.showModal({
+    //       title: '错误',
+    //       content: '无法获取用户资金信息',
+    //       showCancel: false
+    //     })
+    //   }
+    // })
+    var customer_id = '';
+    var order_name = e.currentTarget.dataset.id;
+    var m_number = 101455;
+    var timestamp = Date.now();
+    var secret_key = '3c15fc75be174de783515a3e2365ed50';
+    var nonce_str = '1234567890ABC';
+    var code = m_number + '&' + timestamp + '&' + nonce_str + '&' + secret_key;
+    var sign = md5.hexMD5(code);
+    var amount = e.currentTarget.dataset.money;
+    var order_name = 'aaa';
+    var out_order_no = '1234';
+    var platform = 'WECHATPAY';
+    var currency = 'AUD';
+    api.fetchRequest('/user/wxinfo', {
       token: wx.getStorageSync('token'),
-    }).then(function(res) {
+    }).then(function (res) {
       if (res.data.code == 0) {
-        // res.data.data.balance
-        money = money - res.data.data.balance;
-        if (res.data.data.score < needScore) {
-          wx.showModal({
-            title: '错误',
-            content: '您的积分不足，无法支付',
-            showCancel: false
-          })
-          return;
-        }
-        if (money <= 0) {
-          // 直接使用余额支付
-          api.fetchRequest('/order/pay', {
-            token: wx.getStorageSync('token'),
-            orderId: orderId
-          }, 'POST', 0, {
-            'content-type': 'application/x-www-form-urlencoded'
-          }).then(function(res) {
-            that.onShow();
-          })
-        } else {
-          wxpay.wxpay(app, money, orderId, "/pages/order-list/index");
-        }
-      } else {
-        wx.showModal({
-          title: '错误',
-          content: '无法获取用户资金信息',
-          showCancel: false
-        })
+        customer_id = res.data.data.openid;
+        var url = 'https://www.omipay.com.cn/omipay/api/v2/MakeAppletOrder?m_number=' + m_number + '&timestamp=' + timestamp + '&nonce_str=' + nonce_str + '&sign=' + sign + '&currency=' + currency + '&amount=' + amount + '&order_name=' + order_name + '&out_order_no=' + out_order_no + '&platform=' + platform + '&app_id=' + api.appid + '&customer_id=' + customer_id;
+        wx.request({
+          url: url,
+          method: 'POST',
+          header: {
+            "Content-Type": "application/json"
+          },
+          success: function (res) {
+            console.log(res);
+          }
+        });
       }
-    })
+    });
   },
   onLoad: function(options) {
     // 生命周期函数--监听页面加载
