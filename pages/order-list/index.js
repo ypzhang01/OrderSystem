@@ -93,16 +93,18 @@ Page({
     var nonce_str = '1234567890ABC';
     var code = m_number + '&' + timestamp + '&' + nonce_str + '&' + secret_key;
     var sign = md5.hexMD5(code);
-    var amount = e.currentTarget.dataset.money;
+    var amount = e.currentTarget.dataset.money * 100;
     var order_name = 'aaa';
-    var out_order_no = '1234';
+    var out_order_no = '';
     var platform = 'WECHATPAY';
-    var currency = 'AUD';
+    var currency = 'CNY';
     api.fetchRequest('/user/wxinfo', {
       token: wx.getStorageSync('token'),
     }).then(function (res) {
       if (res.data.code == 0) {
         customer_id = res.data.data.openid;
+        out_order_no = customer_id + timestamp;
+        console.log(out_order_no);
         var url = 'https://www.omipay.com.cn/omipay/api/v2/MakeAppletOrder?m_number=' + m_number + '&timestamp=' + timestamp + '&nonce_str=' + nonce_str + '&sign=' + sign + '&currency=' + currency + '&amount=' + amount + '&order_name=' + order_name + '&out_order_no=' + out_order_no + '&platform=' + platform + '&app_id=' + api.appid + '&customer_id=' + customer_id;
         wx.request({
           url: url,
@@ -112,6 +114,23 @@ Page({
           },
           success: function (res) {
             console.log(res);
+            console.log(res.data.package);
+            wx.requestPayment({
+              timeStamp: res.data.timeStamp,
+              nonceStr: res.data.nonceStr,
+              package: res.data.package,
+              signType: 'MD5',
+              paySign: res.data.paySign,
+              success: function(res) {
+                console.log('success pay request' + res);
+              },
+              fail: function(res) {
+                console.info(res);
+              },
+              complete: function() {
+                console.info('call back');
+              }
+            })
           }
         });
       }
