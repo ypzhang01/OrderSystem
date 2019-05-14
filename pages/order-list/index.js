@@ -90,7 +90,17 @@ Page({
     var m_number = 101455;
     var timestamp = Date.now();
     var secret_key = '3c15fc75be174de783515a3e2365ed50';
-    var nonce_str = '1234567890ABC';
+    function getNoncestr(length = 32) {
+      let chars = 'qwertyuiopasdfghjklzxcvbnm1234567890';
+      let str = '';
+      let i = 0;
+      for (i = 0; i < length; i ++) {
+        str += chars.substr(Math.floor(Math.random() * chars.length), 1);
+      }
+      return str;
+    };
+    let nonce_str = getNoncestr();
+    console.log(nonce_str);
     var code = m_number + '&' + timestamp + '&' + nonce_str + '&' + secret_key;
     var sign = md5.hexMD5(code);
     var amount = e.currentTarget.dataset.money * 100;
@@ -114,7 +124,6 @@ Page({
           },
           success: function (res) {
             console.log(res);
-            console.log(res.data.package);
             wx.requestPayment({
               timeStamp: res.data.timeStamp,
               nonceStr: res.data.nonceStr,
